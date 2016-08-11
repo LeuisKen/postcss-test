@@ -8,11 +8,11 @@ module.exports = postcss.plugin('clearfix', function() {
 
   return function(css) {
 
-    // 遍历所有的 clear 属性
+    // 遍历所有包涵 clear 的 decl
     css.walkDecls('clear', function(decl) {
-      // 如果 clear 属性的值，是 fix
+      // 如果 decl 的值，也就是 clear 属性的值，是 fix
       if (decl.value === 'fix') {
-        // 将这一条 css 规则，传入我们的处理函数 clearFix
+        // 将这一条 decl ，传入我们的处理函数 clearFix
         clearFix(decl);
       }
 
@@ -23,26 +23,26 @@ module.exports = postcss.plugin('clearfix', function() {
 
 /**
  * clear: fix; 规则的处理函数
- * @param  {string} decl  当前的 css 规则
+ * @param  {string} decl  待处理的 decl
  */
 function clearFix(decl) {
 
-  var origRule = decl.parent,             // 整个规则对象
-      ruleSelectors = origRule.selectors, // 规则对象的选择器
-      newRule;                            // 要新建的规则对象
+  var origRule = decl.parent,             // 获取 decl 的 rule
+      ruleSelectors = origRule.selectors, // 获取 origRule 的选择器
+      newRule;                            // 保存新的 rule 的变量
 
-  // 创建新规则对象的选择器，将现有规则的选择器遍历一遍并加上 ':after' 伪类
+  // 创建 newRule 的选择器，将 origRule 的选择器遍历一遍并加上 ':after' 伪类
   ruleSelectors = ruleSelectors.map(function(ruleSelector){
       return ruleSelector + ':after';
     }).join(',\n');
 
-  // 复制现有规则对象 origRule 创建新的规则对象，选择器设置为加了 ':after' 的 ruleSelectors
+  // 复制 origRule 创建 newRule ，选择器设置为加了 ':after' 的 ruleSelectors
   // 后面的 removeAll 会移除 origRule 中已有的 decl
   newRule = origRule.cloneBefore({
     selector: ruleSelectors
   }).removeAll();
 
-  // 将我们 clear : fix 的实现加入新的规则对象
+  // 将我们 clear : fix 的实现加入 newRule
   newRule.append({
     prop: 'content',
     value: '\'\'',
@@ -57,7 +57,7 @@ function clearFix(decl) {
     source: decl.source
   });
 
-  // 如果 origRule 仅包含 clear : fix，移除 origRule
+  // 如果 origRule 仅包含 clear : fix，移除整个 origRule
   if (decl.prev() === undefined && decl.next() === undefined) {
     origRule.remove();
   } else {
