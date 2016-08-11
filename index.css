@@ -1,3 +1,4 @@
-body {
+body, div {
+  width: 100px;
   clear: fix;
 }

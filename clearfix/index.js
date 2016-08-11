@@ -1,34 +1,55 @@
 'use strict';
 
-var postcss = require('postcss'),
-    displays = ['block', 'table'];
+// 引入 postcss
+var postcss = require('postcss')
+
+// 将模块作为 postcss 的插件导出
+module.exports = postcss.plugin('clearfix', function() {
+
+  return function(css) {
+
+    // 遍历所有的 clear 属性
+    css.walkDecls('clear', function(decl) {
+      // 如果 clear 属性的值，是 fix
+      if (decl.value === 'fix') {
+        // 将这一条 css 规则，传入我们的处理函数 clearFix
+        clearFix(decl);
+      }
+
+    });
+
+  };
+});
 
 /**
- * Clear: fix; rule handler
- * @param  {string} decl  current decleration
+ * clear: fix; 规则的处理函数
+ * @param  {string} decl  当前的 css 规则
  */
-function clearFix(decl, opts) {
+function clearFix(decl) {
 
-  var origRule = decl.parent,
-      ruleSelectors = origRule.selectors,
-      newRule;
+  var origRule = decl.parent,             // 整个规则对象
+      ruleSelectors = origRule.selectors, // 规则对象的选择器
+      newRule;                            // 要新建的规则对象
 
+  // 创建新规则对象的选择器，将现有规则的选择器遍历一遍并加上 ':after' 伪类
   ruleSelectors = ruleSelectors.map(function(ruleSelector){
       return ruleSelector + ':after';
     }).join(',\n');
 
-  // Insert the :after rule before the original rule
+  // 复制现有规则对象 origRule 创建新的规则对象，选择器设置为加了 ':after' 的 ruleSelectors
+  // 后面的 removeAll 会移除 origRule 中已有的 decl
   newRule = origRule.cloneBefore({
     selector: ruleSelectors
   }).removeAll();
 
+  // 将我们 clear : fix 的实现加入新的规则对象
   newRule.append({
     prop: 'content',
     value: '\'\'',
     source: decl.source
   }, {
     prop: 'display',
-    value: opts.display,
+    value: 'block',
     source: decl.source
   }, {
     prop: 'clear',
@@ -36,33 +57,12 @@ function clearFix(decl, opts) {
     source: decl.source
   });
 
-  // If the original rule only had clear:fix in it, remove the whole rule
+  // 如果 origRule 仅包含 clear : fix，移除 origRule
   if (decl.prev() === undefined && decl.next() === undefined) {
     origRule.remove();
   } else {
-    // Otherwise just remove the delcl
+    // 如果不是，则仅移除 clear : fix 这一行
     decl.remove();
   }
 
 }
-
-module.exports = postcss.plugin('postcss-clearfix', function(opts) {
-  opts = opts || {};
-
-  if (displays.indexOf(opts.display) === -1) {
-    opts.display = displays[0];
-  }
-
-  return function(css) {
-
-    // Run handlers through all relevant CSS decls
-    css.walkDecls('clear', function(decl) {
-
-      if (decl.value === 'fix') {
-        clearFix(decl, opts);
-      }
-
-    });
-
-  };
-});
