@@ -2,3 +2,7 @@ body, div {
   width: 100px;
   clear: fix;
 }
+
+label {
+  clear: fix;
+}

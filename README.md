@@ -28,6 +28,32 @@ label {
 
 好了，就这两个概念。
 
+我们插件的作用，就是输出如下结果：
+
+```css
+/* /dist/app.css */
+
+body:after,
+div:after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+body, div {
+  width: 100px;
+}
+
+label:after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+```
+
+为 clear 添加新的属性值 fix 。通过 postcss 来实现这个并不存在的特性。实现参考了经典的清除浮动方法，相信做过前端都会清除浮动。
+
 ## postcss 插件的引入
 
 详见 [webpack.config.js](./webpack.config.js#L32) 。
